@@ -1,27 +1,53 @@
 package com.example.drivingbehaviormonitor.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.drivingbehaviormonitor.utils.useAccelerometerData
 import com.example.drivingbehaviormonitor.utils.useGyroscopeData
 
-/**
- * AccelerationScreen
- * This screen shows live data from the phone’s accelerometer and gyroscope.
- * We use custom hooks (functions) to tap into those sensors in real-time.
- * Super useful for visualizing braking, turning, or jerky movement.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccelerationScreen(navController: NavController) {
+    // These custom hooks pull live accelerometer and gyroscope data from the device/emulator.
     val accelerometerData = useAccelerometerData()
     val gyroscopeData = useGyroscopeData()
+
+    //  We're focusing on the Z-axis (up/down) to determine acceleration or braking.
+    val zAxis = accelerometerData[2]
+
+    //  When the screen first loads, we remember the initial Z value as a reference (baseline).
+    // This allows us to detect relative changes instead of relying on hardcoded gravity values.
+    val baselineZ = remember { mutableFloatStateOf(zAxis) }
+
+    //  Threshold determines how sensitive we are to detecting movement.
+    val threshold = 1.5f
+    val delta = zAxis - baselineZ.floatValue // how much has Z changed?
+
+    // Simple logic to interpret driving behavior based on delta:
+    // - If Z drops significantly, we assume the car is speeding up (accelerating)
+    // - If Z increases significantly, we assume braking
+    // - Otherwise, assume stable
+    val statusMessage = when {
+        delta > threshold -> "Braking"
+        delta < -threshold -> "Accelerating"
+        else -> "Stable"
+    }
 
     Scaffold(
         topBar = {
@@ -29,7 +55,10 @@ fun AccelerationScreen(navController: NavController) {
                 title = { Text("Acceleration & Braking") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 }
             )
@@ -40,15 +69,21 @@ fun AccelerationScreen(navController: NavController) {
                 .padding(innerPadding)
                 .padding(24.dp)
         ) {
-            //  Showing accelerometer data (movement along X/Y/Z axis)
+            // Live accelerometer sensor data
             Text(text = "Accelerometer Data:")
             Text(text = "X: ${"%.2f".format(accelerometerData[0])}")
             Text(text = "Y: ${"%.2f".format(accelerometerData[1])}")
-            Text(text = "Z: ${"%.2f".format(accelerometerData[2])}")
+            Text(text = "Z: $zAxis")
 
-            Spacer(modifier = Modifier.height(16.dp)) // adds spacing between sensor sections
+            Spacer(modifier = Modifier.height(8.dp))
 
-            //  Showing gyroscope data (rotation/turning speed)
+            // Show interpreted driving status
+            Text(text = "Driving Behavior:")
+            Text(text = "Status: $statusMessage")
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Gyroscope data can help with understanding rotation, which we might use later
             Text(text = "Gyroscope Data:")
             Text(text = "X: ${"%.2f".format(gyroscopeData[0])}")
             Text(text = "Y: ${"%.2f".format(gyroscopeData[1])}")

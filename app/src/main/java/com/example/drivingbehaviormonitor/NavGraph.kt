@@ -8,6 +8,10 @@ import androidx.navigation.compose.composable
 import com.example.drivingbehaviormonitor.screens.HomeScreen
 import com.example.drivingbehaviormonitor.screens.AccelerationScreen
 import com.example.drivingbehaviormonitor.screens.SpeedScreen
+import com.example.drivingbehaviormonitor.screens.CorneringScreen
+import com.example.drivingbehaviormonitor.screens.LaneChangeScreen
+
+
 
 //  This is our app’s navigation map!
 // It tells the app what screen to show when we navigate to a certain route (like "home" or "speed").
@@ -16,7 +20,7 @@ import com.example.drivingbehaviormonitor.screens.SpeedScreen
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = "home" // 👈 this is the first screen the user sees
+        startDestination = "home" //  this is the first screen the user sees
     ) {
         composable("home") {
             HomeScreen(navController = navController)
@@ -30,5 +34,14 @@ fun NavGraph(navController: NavHostController) {
 
         // We can add more route/screen links here later for other behavior categories.
         // e.g., composable("cornering") { CorneringScreen(navController) }
+        composable("cornering") {
+            CorneringScreen(navController = navController)
+        }
+
+        composable("lanechange") {
+            LaneChangeScreen(navController = navController)
+        }
+
+
     }
 }
