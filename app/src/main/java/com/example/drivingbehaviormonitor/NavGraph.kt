@@ -10,7 +10,7 @@ import com.example.drivingbehaviormonitor.screens.AccelerationScreen
 import com.example.drivingbehaviormonitor.screens.SpeedScreen
 import com.example.drivingbehaviormonitor.screens.CorneringScreen
 import com.example.drivingbehaviormonitor.screens.LaneChangeScreen
-
+import com.example.drivingbehaviormonitor.screens.WearablesScreen
 
 
 //  This is our app’s navigation map!
@@ -42,6 +42,9 @@ fun NavGraph(navController: NavHostController) {
             LaneChangeScreen(navController = navController)
         }
 
+        composable("wearable") {
+            WearablesScreen(navController = navController)
+        }
 
     }
 }
