@@ -46,6 +46,41 @@ fun useAccelerometerData(): FloatArray {
     return sensorValues.value
 }
 
+@Composable
+fun useGravityAccelerometerData(): FloatArray {
+    val context = LocalContext.current
+    val sensorManager = remember {
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    }
+    val sensorValues = remember { mutableStateOf(floatArrayOf(0f, 0f, 0f)) }
+
+    DisposableEffect(Unit) {
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                event?.let {
+                    if (it.sensor.type == Sensor.TYPE_GRAVITY) {
+                        sensorValues.value = it.values.clone()
+                    }
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                // Not needed for our use case
+            }
+        }
+
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI)
+
+        // Clean up listener when this composable leaves the screen (to avoid battery drain)
+        onDispose {
+            sensorManager.unregisterListener(listener)
+        }
+    }
+
+    return sensorValues.value
+}
+
 // This does the same thing, but for the gyroscope. It returns [x, y, z] rotation rates in rad/s.
 //  Used to track turning or rotation-related behavior — helpful for analyzing sharp turns, etc.
 @Composable

@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.drivingbehaviormonitor.utils.useAccelerometerData
+import com.example.drivingbehaviormonitor.utils.useGravityAccelerometerData
 import com.example.drivingbehaviormonitor.utils.useGyroscopeData
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,17 +28,24 @@ fun AccelerationScreen(navController: NavController) {
     // These custom hooks pull live accelerometer and gyroscope data from the device/emulator.
     val accelerometerData = useAccelerometerData()
     val gyroscopeData = useGyroscopeData()
+    val gravityData = useGravityAccelerometerData()
 
-    //  We're focusing on the Z-axis (up/down) to determine acceleration or braking.
-    val zAxis = accelerometerData[2]
+    //  We're getting net acceleration without gravity
+    val xAxis = accelerometerData[0] - gravityData[0]
+    val yAxis = accelerometerData[1] - gravityData[1]
+    val zAxis = accelerometerData[2] - gravityData[2]
 
     //  When the screen first loads, we remember the initial Z value as a reference (baseline).
     // This allows us to detect relative changes instead of relying on hardcoded gravity values.
+    val baselineX = remember { mutableFloatStateOf(xAxis) }
+    val baselineY = remember { mutableFloatStateOf(yAxis) }
     val baselineZ = remember { mutableFloatStateOf(zAxis) }
 
     //  Threshold determines how sensitive we are to detecting movement.
+    // How much has the net acceleration changed
     val threshold = 1.5f
-    val delta = zAxis - baselineZ.floatValue // how much has Z changed?
+    val delta = Math.sqrt(Math.pow((xAxis - baselineX.floatValue).toDouble(), 2.0) + Math.pow((yAxis - baselineY.floatValue).toDouble(), 2.0) + Math.pow((zAxis - baselineZ.floatValue).toDouble(), 2.0)).toFloat()
+
 
     // Simple logic to interpret driving behavior based on delta:
     // - If Z drops significantly, we assume the car is speeding up (accelerating)
