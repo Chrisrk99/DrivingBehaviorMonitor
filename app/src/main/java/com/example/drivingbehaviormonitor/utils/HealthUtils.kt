@@ -1,9 +1,7 @@
 package com.example.drivingbehaviormonitor.utils
 
-import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,37 +31,65 @@ val PERMISSIONS =
 fun queryHealthApiSupported(): Boolean =
     HealthConnectClient.getSdkStatus(LocalContext.current) == HealthConnectClient.SDK_AVAILABLE
 
+data class HRVResp (val hrv: Double?, val resp: Double?)
+
 @Composable
-fun queryHeartRateVariability(): Double? {
+fun queryHeartRateVariabilityAndResp(): HRVResp {
+    val TAG = "queryHeartRateVariability"
+
     if (!queryHealthApiSupported()) {
-        return null
+        return HRVResp(null, null)
     } // catchall
 
     val context = LocalContext.current
-    val healthConnect = HealthConnectClient.getOrCreate(context)
+    val healthConnect = remember { HealthConnectClient.getOrCreate(context) }
 
     // widget state
     var heartRateVar by remember { mutableStateOf<Double?>(null) }
     var permsEnabled by remember { mutableStateOf(false) }
+    var permsPrompt by remember { mutableStateOf(false) }
+    var respRateVar by remember { mutableStateOf<Double?>(null) }
 
     // perms
     // https://stackoverflow.com/a/67120456
     val permLauncher =
         rememberLauncherForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
+            Log.d(TAG, "got granted $granted")
             permsEnabled = granted.containsAll(PERMISSIONS)
+            permsPrompt = false
         }
 
     // polling for the thingy
-    LaunchedEffect(permsEnabled) {
+    LaunchedEffect(permsEnabled, permsEnabled, heartRateVar) {
         val granted = healthConnect.permissionController.getGrantedPermissions()
         if (!granted.containsAll(PERMISSIONS)) {
-            // request permissions
-            permLauncher.launch(PERMISSIONS)
+            if (!permsPrompt) {
+                // request permissions
+                permsPrompt = true
+                Log.d(TAG, "pushing permlauncher")
+                permLauncher.launch(PERMISSIONS)
+                Log.d(TAG, "launched permlauncher")
+            }
             heartRateVar = null
+            Log.d(TAG, "returned on perms not found")
             return@LaunchedEffect
         }
 
-        // update the heartRate thingy
+        // update the heartRate and resprate thingy
+        respRateVar = try {
+            healthConnect.readRecords(
+                ReadRecordsRequest(
+                    RespiratoryRateRecord::class,
+                    timeRangeFilter = TimeRangeFilter.Companion.after(
+                        LocalDateTime.now().minusSeconds(30)
+                    )
+                )
+            ).records.last().rate
+        } catch (e: Exception) {
+            Log.e(TAG, "failed to read heart rate var record", e)
+            null
+        }
+
         heartRateVar = try {
             healthConnect.readRecords(
                 ReadRecordsRequest(
@@ -74,10 +100,11 @@ fun queryHeartRateVariability(): Double? {
                 )
             ).records.last().heartRateVariabilityMillis
         } catch (e: Exception) {
-            Log.e("queryHeartRateVariability", "failed to read heart rate var record", e)
+            Log.e(TAG, "failed to read heart rate var record", e)
             null
         }
     }
 
-    return heartRateVar
+
+    return HRVResp(hrv = heartRateVar, resp = respRateVar)
 }
