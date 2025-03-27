@@ -1,6 +1,6 @@
 # DrivingBehaviorMonitor 🚗📱
 
- group project for tracking driving behavior using live phone sensors (accelerometer, gyroscope) and GPS data. This app shows real-time readings for acceleration, braking, and speed consistency. We’ve set it up to be beginner-friendly, so anyone on the team can jump in and start working on it without too much hassle. Let’s break it down!
+ group project for tracking driving behavior using live phone sensors (accelerometer, gyroscope) and GPS data. This app shows real-time readings for acceleration, braking, and speed consistency. 
 
 ---
 
