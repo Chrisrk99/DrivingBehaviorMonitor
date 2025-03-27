@@ -1,29 +1,36 @@
 package com.example.drivingbehaviormonitor
 
+import android.Manifest
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.compose.rememberNavController
 import com.example.drivingbehaviormonitor.ui.theme.DrivingBehaviorMonitorTheme
 
-// This is the starting point of our app!
-// When the app launches, this activity gets created and sets up everything.
 class MainActivity : ComponentActivity() {
+
+    // Register for permission result callback
+    private val locationPermissionRequest =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (!isGranted) {
+                Toast.makeText(this, "Location permission is required to show weather info!", Toast.LENGTH_LONG).show()
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // This makes the app use the whole screen (goes under the status bar too).
+        // Ask for location permission when app launches
+        locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+
         enableEdgeToEdge()
 
-        // This is where we tell the app: “Hey, show the UI using Jetpack Compose!”
         setContent {
-            // We apply our app’s custom theme here so everything looks consistent.
             DrivingBehaviorMonitorTheme {
-                // This is our navigation controller. Think of it as a mini-GPS for navigating between screens.
                 val navController = rememberNavController()
-
-                // This is where the navigation graph kicks in — it decides which screen to show.
                 NavGraph(navController = navController)
             }
         }

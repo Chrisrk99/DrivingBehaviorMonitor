@@ -50,11 +50,14 @@ dependencies {
     implementation(libs.androidx.material3)
 
     // ✅ Navigation support
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation(libs.androidx.navigation.compose)
 
     // ✅ Location/GPS support for speed tracking
-    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    // ✅ Health Connect (wearable metrics)
     implementation(libs.androidx.connect.client)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

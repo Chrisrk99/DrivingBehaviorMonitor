@@ -8,6 +8,7 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 composeBom = "2024.09.00"
+navigationCompose = "2.8.9"
 playServicesWearable = "18.0.0"
 composeMaterial = "1.2.1"
 composeFoundation = "1.2.1"
@@ -24,8 +25,10 @@ constraintlayout = "2.2.1"
 healthServicesClient = "1.1.0-alpha05"
 connectClient = "1.1.0-beta01"
 
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -54,6 +57,7 @@ androidx-watchface-complications-data-source-ktx = { group = "androidx.wear.watc
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-health-services-client = { group = "androidx.health", name = "health-services-client", version.ref = "healthServicesClient" }
 androidx-connect-client = { group = "androidx.health.connect", name = "connect-client", version.ref = "connectClient" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

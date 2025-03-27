@@ -45,6 +45,8 @@ fun HomeScreen(navController: NavController) {
                             "Cornering Behavior" -> navController.navigate("cornering")
                             "Lane Changes and Drifts" -> navController.navigate("lanechange")
                             "Wearable Device Metrics" -> navController.navigate("wearable")
+                            "Environmental & Contextual Metrics" -> navController.navigate("environment")
+
                             // Wearables & Contextual metrics are planned for future.
                         }
                     }

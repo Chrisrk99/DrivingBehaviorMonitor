@@ -81,3 +81,53 @@ fun queryHeartRateVariability(): Double? {
 
     return heartRateVar
 }
+
+
+@Composable
+fun queryRespiratoryRate(): Double? {
+    // Check if the Health Connect API is even supported on the device
+    if (!queryHealthApiSupported()) {
+        return null
+    }
+
+    val context = LocalContext.current
+    val healthConnect = HealthConnectClient.getOrCreate(context)
+
+    // This is the respiratory rate value we'll eventually return (if we get it!)
+    var respiratoryRate by remember { mutableStateOf<Double?>(null) }
+    var permsEnabled by remember { mutableStateOf(false) }
+
+    // Ask the user for permissions (just like we did for HRV)
+    val permLauncher =
+        rememberLauncherForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
+            permsEnabled = granted.containsAll(PERMISSIONS)
+        }
+
+    // Launch the permission check and respiratory rate query
+    LaunchedEffect(permsEnabled) {
+        val granted = healthConnect.permissionController.getGrantedPermissions()
+        if (!granted.containsAll(PERMISSIONS)) {
+            // 🚪 Ask for permission if not already granted
+            permLauncher.launch(PERMISSIONS)
+            respiratoryRate = null
+            return@LaunchedEffect
+        }
+
+        // Try to grab the most recent respiratory rate record from the past 30 seconds
+        respiratoryRate = try {
+            healthConnect.readRecords(
+                ReadRecordsRequest(
+                    RespiratoryRateRecord::class,
+                    timeRangeFilter = TimeRangeFilter.after(
+                        LocalDateTime.now().minusSeconds(30)
+                    )
+                )
+            ).records.last().rate
+        } catch (e: Exception) {
+            Log.e("queryRespiratoryRate", "failed to read respiratory rate record", e)
+            null
+        }
+    }
+
+    return respiratoryRate
+}
