@@ -19,83 +19,86 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.drivingbehaviormonitor.utils.useAccelerometerData
-import com.example.drivingbehaviormonitor.utils.useGravityAccelerometerData
 import com.example.drivingbehaviormonitor.utils.useGyroscopeData
 
+// This tells the app we're using some experimental features from Material3 library
 @OptIn(ExperimentalMaterial3Api::class)
+// This is the main function for our Acceleration Screen, and it takes a NavController to handle navigation
 @Composable
 fun AccelerationScreen(navController: NavController) {
-    // These custom hooks pull live accelerometer and gyroscope data from the device/emulator.
+    // Here I used custom hooks to get live data from the phone's sensors
+    // accelerometerData gives us movement info (X, Y, Z axes)
     val accelerometerData = useAccelerometerData()
+    // gyroscopeData gives us rotation info (also X, Y, Z axes)
     val gyroscopeData = useGyroscopeData()
-    val gravityData = useGravityAccelerometerData()
 
-    //  We're getting net acceleration without gravity
-    val xAxis = accelerometerData[0] - gravityData[0]
-    val yAxis = accelerometerData[1] - gravityData[1]
-    val zAxis = accelerometerData[2] - gravityData[2]
+    // We're focusing on the Z-axis (up/down movement) to figure out if the car is speeding up or slowing down
+    val zAxis = accelerometerData[2]
 
-    //  When the screen first loads, we remember the initial Z value as a reference (baseline).
-    // This allows us to detect relative changes instead of relying on hardcoded gravity values.
-    val baselineX = remember { mutableFloatStateOf(xAxis) }
-    val baselineY = remember { mutableFloatStateOf(yAxis) }
+    // When the screen loads, we "remember" the starting Z value as our baseline
+    // This helps us compare changes later instead of guessing what "normal" is
     val baselineZ = remember { mutableFloatStateOf(zAxis) }
 
-    //  Threshold determines how sensitive we are to detecting movement.
-    // How much has the net acceleration changed
+    // This threshold is like a sensitivity setting - it decides how big a change in Z we care about
     val threshold = 1.5f
-    val delta = Math.sqrt(Math.pow((xAxis - baselineX.floatValue).toDouble(), 2.0) + Math.pow((yAxis - baselineY.floatValue).toDouble(), 2.0) + Math.pow((zAxis - baselineZ.floatValue).toDouble(), 2.0)).toFloat()
+    // Here I calculate how much Z has changed from our baseline
+    val delta = zAxis - baselineZ.floatValue
 
-
-    // Simple logic to interpret driving behavior based on delta:
-    // - If Z drops significantly, we assume the car is speeding up (accelerating)
-    // - If Z increases significantly, we assume braking
-    // - Otherwise, assume stable
+    // This part figures out what the driver is doing based on the Z change (delta):
+    // - If Z goes way up (delta > threshold), we say "Braking"
+    // - If Z drops a lot (delta < -threshold), we say "Accelerating"
+    // - Otherwise, we assume the car is "Stable"
     val statusMessage = when {
         delta > threshold -> "Braking"
         delta < -threshold -> "Accelerating"
         else -> "Stable"
     }
 
+    // Scaffold is like the basic layout structure for our screen
     Scaffold(
+        // This creates a top bar with a title and a back button
         topBar = {
             TopAppBar(
-                title = { Text("Acceleration & Braking") },
+                title = { Text("Acceleration & Braking") }, // This sets the title at the top
                 navigationIcon = {
+                    // This adds a back button that takes us to the previous screen
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back" // This is for accessibility (screen readers)
                         )
                     }
                 }
             )
         }
     ) { innerPadding ->
+        // Column stacks everything vertically on the screen
         Column(
             modifier = Modifier
-                .padding(innerPadding)
-                .padding(24.dp)
+                .padding(innerPadding) // This adds space so stuff doesn’t bump into the top bar
+                .padding(24.dp) // This adds extra padding around the edges for a nice look
         ) {
-            // Live accelerometer sensor data
+            // Here I’m showing the raw accelerometer data
             Text(text = "Accelerometer Data:")
-            Text(text = "X: ${"%.2f".format(accelerometerData[0])}")
-            Text(text = "Y: ${"%.2f".format(accelerometerData[1])}")
-            Text(text = "Z: $zAxis")
+            Text(text = "X: ${"%.2f".format(accelerometerData[0])}") // X-axis (side-to-side movement)
+            Text(text = "Y: ${"%.2f".format(accelerometerData[1])}") // Y-axis (forward/back movement)
+            Text(text = "Z: $zAxis") // Z-axis (up/down movement, our main focus)
 
+            // This adds a little gap between sections
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Show interpreted driving status
+            // This shows what we think the driver is doing based on the Z-axis
             Text(text = "Driving Behavior:")
-            Text(text = "Status: $statusMessage")
+            Text(text = "Status: $statusMessage") // Displays "Braking", "Accelerating", or "Stable"
 
+            // Another gap to keep things neat
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Gyroscope data can help with understanding rotation, which we might use later
+            // Here I’m showing gyroscope data, which we might use later for rotation stuff
             Text(text = "Gyroscope Data:")
-            Text(text = "X: ${"%.2f".format(gyroscopeData[0])}")
-            Text(text = "Y: ${"%.2f".format(gyroscopeData[1])}")
-            Text(text = "Z: ${"%.2f".format(gyroscopeData[2])}")
+            Text(text = "X: ${"%.2f".format(gyroscopeData[0])}") // X-axis rotation
+            Text(text = "Y: ${"%.2f".format(gyroscopeData[1])}") // Y-axis rotation
+            Text(text = "Z: ${"%.2f".format(gyroscopeData[2])}") // Z-axis rotation
         }
     }
 }

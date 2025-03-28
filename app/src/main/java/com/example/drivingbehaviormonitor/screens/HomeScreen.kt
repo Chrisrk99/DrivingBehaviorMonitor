@@ -10,9 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
-// HomeScreen displays a vertical list of driving behavior categories.
-// Each category represents a feature or sensor-related metric we’re tracking in the app.
-// When a user taps on one, it navigates to the corresponding detailed screen (if implemented).
+// This is the HomeScreen – it’s like the main menu of our app!
+// It shows a list of driving behavior categories we’re tracking.
+// When someone taps a category, it takes them to a detailed screen for that topic.
+// Here’s the list of categories we’re working with:
 val categories = listOf(
     "Acceleration and Braking Patterns",
     "Speed Consistency",
@@ -22,33 +23,38 @@ val categories = listOf(
     "Environmental & Contextual Metrics"
 )
 
+// This is the main function that builds our HomeScreen
 @Composable
-fun HomeScreen(navController: NavController) {
-    // LazyColumn efficiently renders vertical scrollable content (good for long lists).
+fun HomeScreen(navController: NavController) { // NavController helps us move to other screens
+    // LazyColumn is a cool tool that makes a scrollable list – perfect for showing our categories!
+    // It only loads what’s on the screen, so it’s super efficient, even with long lists
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize() // takes up the full available screen space
-            .padding(16.dp) // padding around the edges for cleaner look
+            .fillMaxSize() // This makes the list take up the whole screen
+            .padding(16.dp) // Adds some space around the edges so it looks neat
     ) {
+        // This "items" part loops through our categories list and makes an entry for each one
         items(categories) { category ->
-            // Each category is shown as a clickable Text element.
+            // Each category becomes a clickable Text item in the list
             Text(
-                text = category,
+                text = category, // This shows the category name (like "Cornering Behavior")
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth() // Makes the text stretch across the screen
                     .clickable {
-                        //  Navigation logic: when the user taps a category, it opens the related screen.
-                        // Currently wired up to 4 screens. The rest can be added later.
+                        // When someone taps a category, this decides where to go!
+                        // It uses the NavController to switch to the right screen
                         when (category) {
+                            // Each line here links a category to its screen
                             "Acceleration and Braking Patterns" -> navController.navigate("acceleration")
                             "Speed Consistency" -> navController.navigate("speed")
                             "Cornering Behavior" -> navController.navigate("cornering")
                             "Lane Changes and Drifts" -> navController.navigate("lanechange")
                             "Wearable Device Metrics" -> navController.navigate("wearable")
-                            // Wearables & Contextual metrics are planned for future.
+                            "Environmental & Contextual Metrics" -> navController.navigate("environment")
+                            // Some screens (like Wearable) might not be built yet – we can add them later!
                         }
                     }
-                    .padding(vertical = 12.dp) // adds space between list items
+                    .padding(vertical = 12.dp) // Adds some space above and below each item so they’re not squished
             )
         }
     }
