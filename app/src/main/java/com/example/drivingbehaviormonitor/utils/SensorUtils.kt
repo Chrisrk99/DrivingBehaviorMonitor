@@ -52,6 +52,47 @@ fun useAccelerometerData(): FloatArray {
     return sensorValues.value
 }
 
+@Composable
+fun useGravityAccelerometerData(): FloatArray {
+    val context = LocalContext.current // Grabs the app’s context so we can use phone features
+    val sensorManager = remember {
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager // Sets up the sensor manager
+    }
+    // This holds the [x, y, z] values of gravitational force
+    val sensorValues = remember { mutableStateOf(floatArrayOf(0f, 0f, 0f)) }
+
+    // This starts listening for sensor updates when the screen loads
+    DisposableEffect(Unit) {
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                // When the sensor sends new data, we grab it here
+                event?.let {
+                    if (it.sensor.type == Sensor.TYPE_GRAVITY) {
+                        // If it’s from gravity, update our values
+                        sensorValues.value = it.values.clone() // Clone keeps the data safe
+                    }
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                // We don’t need this for now – it’s about sensor precision
+            }
+        }
+
+        // Here I get the accelerometer sensor from the phone
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        // This tells the sensor to send updates at a speed good for UI (not too fast or slow)
+        sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI)
+
+        // When the screen goes away, we stop listening to save battery
+        onDispose {
+            sensorManager.unregisterListener(listener)
+        }
+    }
+
+    // This hands back the latest [x, y, z] values we got
+    return sensorValues.value
+}
 // This does the same thing but for the gyroscope. It gives [x, y, z] rotation rates in rad/s.
 // It’s used to track turning or rotation, like spotting sharp turns.
 @Composable

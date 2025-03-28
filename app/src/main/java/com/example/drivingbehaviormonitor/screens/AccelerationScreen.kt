@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.drivingbehaviormonitor.utils.useAccelerometerData
+import com.example.drivingbehaviormonitor.utils.useGravityAccelerometerData
 import com.example.drivingbehaviormonitor.utils.useGyroscopeData
 
 // This tells the app we're using some experimental features from Material3 library
@@ -29,20 +30,25 @@ fun AccelerationScreen(navController: NavController) {
     // Here I used custom hooks to get live data from the phone's sensors
     // accelerometerData gives us movement info (X, Y, Z axes)
     val accelerometerData = useAccelerometerData()
+    val gravityData = useGravityAccelerometerData()
     // gyroscopeData gives us rotation info (also X, Y, Z axes)
     val gyroscopeData = useGyroscopeData()
 
-    // We're focusing on the Z-axis (up/down movement) to figure out if the car is speeding up or slowing down
-    val zAxis = accelerometerData[2]
+    // Factor out gravity from each axis. We don't know phone orientation while driving
+    val xAxis = accelerometerData[0] - gravityData[0]
+    val yAxis = accelerometerData[1] - gravityData[1]
+    val zAxis = accelerometerData[2] - gravityData[2]
 
     // When the screen loads, we "remember" the starting Z value as our baseline
     // This helps us compare changes later instead of guessing what "normal" is
+    val baselineX = remember { mutableFloatStateOf(xAxis) }
+    val baselineY = remember { mutableFloatStateOf(yAxis) }
     val baselineZ = remember { mutableFloatStateOf(zAxis) }
 
     // This threshold is like a sensitivity setting - it decides how big a change in Z we care about
     val threshold = 1.5f
     // Here I calculate how much Z has changed from our baseline
-    val delta = zAxis - baselineZ.floatValue
+    val delta = Math.sqrt(Math.pow((xAxis - baselineX.floatValue).toDouble(), 2.0) + Math.pow((yAxis - baselineY.floatValue).toDouble(), 2.0) + Math.pow((zAxis - baselineZ.floatValue).toDouble(), 2.0)).toFloat()
 
     // This part figures out what the driver is doing based on the Z change (delta):
     // - If Z goes way up (delta > threshold), we say "Braking"
@@ -82,7 +88,7 @@ fun AccelerationScreen(navController: NavController) {
             Text(text = "Accelerometer Data:")
             Text(text = "X: ${"%.2f".format(accelerometerData[0])}") // X-axis (side-to-side movement)
             Text(text = "Y: ${"%.2f".format(accelerometerData[1])}") // Y-axis (forward/back movement)
-            Text(text = "Z: $zAxis") // Z-axis (up/down movement, our main focus)
+            Text(text = "Z: ${"%.2f".format(accelerometerData[2])}") // Z-axis (up/down movement)
 
             // This adds a little gap between sections
             Spacer(modifier = Modifier.height(8.dp))
