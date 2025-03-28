@@ -17,6 +17,8 @@ import com.example.drivingbehaviormonitor.utils.queryHealthApiSupported
 import com.example.drivingbehaviormonitor.utils.queryHeartRateVariability
 import com.example.drivingbehaviormonitor.utils.queryRespiratoryRate
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WearablesScreen(navController: NavController) {
